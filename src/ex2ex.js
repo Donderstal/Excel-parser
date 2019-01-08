@@ -31,13 +31,12 @@ const _ = require('lodash');
     })
 
     const addedObjectsArr = objectAdder(groupByModel) 
-    console.log(groupByModel)
 
     let newWb = createWorkbook()
     
     newWb = addSheetToWorkbook(newWb, parsedDataArray, "Raw Data")
     
-    newWb = addSheetToWorkbook(newWb, [{'Test': 'Test'}, {' Test2': 'Test2'}], "Data Analysis")
+    newWb = addSheetToWorkbook(newWb, addedObjectsArr, "Data Analysis")
 
     exportNewWb(newWb, outputSheet)
 })()
@@ -59,19 +58,19 @@ function objectAdder(groupByModel) {
             awArray.push(groupByModel[oKey])
         }
     })
-    const rtObject = (rtArray == []) ? {} : arrayReducer(rtArray)
-    const prObject = (prArray == []) ? {} : arrayReducer(prArray)
-    const awObject = (awArray == []) ? {} : arrayReducer(awArray)
+    const rtObject = (rtArray == []) ? {} : arrayReducer(rtArray, 'RT')
+    const prObject = (prArray == []) ? {} : arrayReducer(prArray, 'PR')
+    const awObject = (awArray == []) ? {} : arrayReducer(awArray, 'AW')
 
-    return [ rtObject, prObject, awObject ]
+    return [ {}, rtObject, ...rtArray, {}, prObject, ...prArray, {}, awObject, ...awArray ]
 }
 
 /**
  * Take array of Data Report objects and add their properties. Return single object with added properties
  */
-function arrayReducer(array) {
+function arrayReducer(array, type) {
     return {
-        'Rijlabels': array['Land'],
+        'Rijlabels': type,
         'Budget spent': _.sumBy(array, (o) => { return o['Budget spent']; }),
         'Impressions': _.sumBy(array, (o) => { return o['Impressions']; }),
         'Website Clicks': _.sumBy(array, (o) => { return o['Website Clicks']; }),
@@ -196,20 +195,20 @@ function groupByModelCreater(dataArray) {
 
     array.forEach((e) => {
         returnObject.Impressions += e.Impressions
-        returnObject.AmountSpent += mathHelper(e['Amount Spent (EUR)'])
-        returnObject.WebsiteClicks += mathHelper(e['Link Clicks'])
-        returnObject.WebsiteContentViews += mathHelper(e['Website Content Views'])
-        returnObject.Purchases7 += mathHelper(e['Purchases [7 Days After Viewing]'])
-        returnObject.Purchases28 += mathHelper(e['Purchases [28 Days After Clicking]'])
-        returnObject.UniquePurchases += (mathHelper(e['Unique Purchases [7 Days After Viewing]']) + mathHelper(e['Unique Purchases [28 Days After Clicking]']))
+        returnObject.AmountSpent += typeParser(e['Amount Spent (EUR)'])
+        returnObject.WebsiteClicks += typeParser(e['Link Clicks'])
+        returnObject.WebsiteContentViews += typeParser(e['Website Content Views'])
+        returnObject.Purchases7 += typeParser(e['Purchases [7 Days After Viewing]'])
+        returnObject.Purchases28 += typeParser(e['Purchases [28 Days After Clicking]'])
+        returnObject.UniquePurchases += (typeParser(e['Unique Purchases [7 Days After Viewing]']) + typeParser(e['Unique Purchases [28 Days After Clicking]']))
     })
    return returnObject
  }
 
 /**
- * Mathhelper (checks for empty strings and converts string to numbers)
+ * typeParser (checks for empty strings and converts string to numbers)
  */
- function mathHelper(input) {
+ function typeParser(input) {
     if (input == '') {
         return 0
     }
@@ -218,11 +217,9 @@ function groupByModelCreater(dataArray) {
     }
  }
 
-
 /**
  * Create new Excel workbook 
  */
-
  function createWorkbook () {
      const newWb = XLSX.utils.book_new()
      return newWb
