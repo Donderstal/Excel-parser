@@ -1,5 +1,6 @@
 // @flow
-    const XLSX = require('xlsx');
+const XLSX = require('xlsx');
+const _ = require('lodash');
 
 (function(){
     const inputSheet = ("./oldExcel/" + process.argv[2] + ".xlsx")
