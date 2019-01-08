@@ -107,37 +107,26 @@ function editRawData(rawDataArray, keyArray) {
  * finalModel will be something like: 
  * { 
  *  'PR': {
- *    'NL': [{data}...]
+ *    'NL': [{data}, {data2}, ...]
  *    ....
  *    },
  *  ...
  *  }
  */
 function analyseParsedData(dataArray, analysisKeyArray) {
-  const prArray = [], rtArray = [], awArray = []
-  const finalModel = dataArray.reduce((acc, row) => {
-    const laagKey = row['Laag'];
-    // Guard when there is a falsy key this could also be a key check
-    if (laagKey == false) {
-      return acc;
-    }
-    // Check that child model if not already created
-    if (acc[laagKey] === undefined) {
-      acc[laagKey] = {
-        rawData: []
-      };
-    }
-    // Add it to the rawData
-    acc[laagKey].rawData.push(row);
-    // Don't forget to return the acc
+  // group By Laag Key
+  const groupByModel = _.groupBy(dataArray, (row) => {
+    return row['Laag'];
+  });
+
+  // group each array in the Laag key by the Land key
+  const finalModel = _.reduce(groupByModel, (acc, group, key) => {
+    acc[key] = _.groupBy(group, (row) => {
+      return row['Land'];
+    });
     return acc;
   }, {});
-
-  const sortedPrArray = sortByCountry(prArray)
-  const sortedRtArray = sortByCountry(rtArray)
-  const sortedAwArray = sortByCountry(awArray)
-  const logArray = [sortedPrArray, sortedRtArray, sortedAwArray]
-  console.log(logArray)
+  return finalModel;
 }
 
 
