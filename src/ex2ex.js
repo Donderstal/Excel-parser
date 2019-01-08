@@ -32,8 +32,6 @@ const _ = require('lodash');
 
     const addedObjectsArr = objectAdder(groupByModel) 
 
-    console.log(addedObjectsArr)
-
     let newWb = createWorkbook()
     
     newWb = addSheetToWorkbook(newWb, parsedDataArray, "Raw Data")
