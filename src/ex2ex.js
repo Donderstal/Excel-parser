@@ -47,7 +47,12 @@ const _ = require('lodash');
  * Take Excel workbook as input and return first sheet as an array of Json objects
  */
 function inputExcelToJSON(inputSheet) {
-    const workbook = XLSX.readFile(inputSheet)
+    /* try { */
+        const workbook = XLSX.readFile(inputSheet)
+/*     }
+    catch(error) {
+
+    } */
     const rawDataArray = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]])
     return rawDataArray
 }
@@ -56,7 +61,7 @@ function inputExcelToJSON(inputSheet) {
  */
 function editRawData(rawDataArray, keyArray) {
     const newArray = []
-        rawDataArray.forEach((e, index) => {
+        rawDataArray.forEach((e) => {
             const testObject = {}
             let campaignNameArr = e['Campaign Name'].split('_')
 
@@ -190,23 +195,29 @@ function objectAdder(groupByModel) {
  * Take array of Data Report objects and add their properties. Return single object with added properties
  */
 function arrayReducer(array, type) {
+    const budSpent = _.sumBy(array, (o) => { return o['Budget spent']; })
+    const imp = _.sumBy(array, (o) => { return o['Impressions']; })
+    const clicks = _.sumBy(array, (o) => { return o['Website Clicks']; })
+    const visits = _.sumBy(array, (o) => { return o['Website Visits']; })
+    const pu28 = _.sumBy(array, (o) => { return o['Purchases [28 Days PC]']; })
+    const pu7 = _.sumBy(array, (o) => { return o['Purchases [7 Days PI]']; })
     return {
         'Rijlabels': type,
-        'Budget spent': _.sumBy(array, (o) => { return o['Budget spent']; }),
-        'Impressions': _.sumBy(array, (o) => { return o['Impressions']; }),
-        'Website Clicks': _.sumBy(array, (o) => { return o['Website Clicks']; }),
-        'Website Visits': _.sumBy(array, (o) => { return o['Website Visits']; }),
-        'Purchases [28 Days PC]': _.sumBy(array, (o) => { return o['Purchases [28 Days PC]']; }),
-        'Purchases [7 Days PI]': _.sumBy(array, (o) => { return o['Purchases [7 Days PI]']; }),
-        'CPM €': _.sumBy(array, (o) => { return o['CPM €']; }),
-        'CPC €': _.sumBy(array, (o) => { return o['CPC €']; }),
-        'CTR %': _.sumBy(array, (o) => { return o['CTR %']; }),
-        'PC Con %': _.sumBy(array, (o) => { return o['PC Con %']; }),
-        'PI Con %': _.sumBy(array, (o) => { return o['PI Con %']; }),
-        'Cost per landing view': _.sumBy(array, (o) => { return o['Cost per landing view']; }),
-        'Cost per PC Con': _.sumBy(array, (o) => { return o['Cost per PC Con']; }),
-        'Cost per PI Con': _.sumBy(array, (o) => { return o['Cost per PI Con']; }),
-        'Som van Purch Con value (TOTAL)': _.sumBy(array, (o) => { return o['Som van Purch Con value (TOTAL)']; }),
+        'Budget spent': budSpent,
+        'Impressions': imp,
+        'Website Clicks': clicks,
+        'Website Visits': visits,
+        'Purchases [28 Days PC]': pu28,
+        'Purchases [7 Days PI]': pu7,
+        'CPM €': ((budSpent * 1000) / imp),
+        'CPC €': (budSpent / clicks),
+        'CTR %': (clicks / imp),
+        'PC Con %': (pu28 / clicks),
+        'PI Con %': (pu7 / imp),
+        'Cost per landing view': (budSpent / visits),
+        'Cost per PC Con': (budSpent / pu28),
+        'Cost per PI Con': (budSpent / pu7),
+        'Som van Purch Con value (TOTAL)': (pu28 + pu7),
     }
 }
 /**
