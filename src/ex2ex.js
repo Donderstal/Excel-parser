@@ -43,7 +43,9 @@ const _ = require('lodash');
 
     const parsedDataArray = editRawData(rawDataArray, rawKeyArray)
 
-    analyseParsedData(parsedDataArray, analysisKeyArray)
+    const groupByModel = analyseParsedData(parsedDataArray, analysisKeyArray)
+  // reduce the group by model into a single object 
+  //  
 
     let newWb = createWorkbook()
     
@@ -116,48 +118,12 @@ function editRawData(rawDataArray, keyArray) {
 function analyseParsedData(dataArray, analysisKeyArray) {
   // group By Laag Key
   const groupByModel = _.groupBy(dataArray, (row) => {
-    return row['Laag'];
+    return row['Laag'] + ':' + row['Land'];
   });
+  console.log(_.keys(groupByModel));
 
-  // group each array in the Laag key by the Land key
-  const finalModel = _.reduce(groupByModel, (acc, group, key) => {
-    acc[key] = _.groupBy(group, (row) => {
-      return row['Land'];
-    });
-    return acc;
-  }, {});
-  return finalModel;
+  return groupByModel;
 }
-
-
-/**
- * Sort by country
- */
- function sortByCountry(array) {
-    const newArray = []
-        if (array.length > 0) {
-            let deArray = [], frArray = [], itArray = [], nlArray = [], ukArray = []
-            array.forEach((e) => {
-                if (e['Land'] == 'DE') {
-                    deArray.push(e)
-                }
-                else if (e['Land'] == 'FR') {
-                    frArray.push(e)
-                }
-                else if (e['Land'] == 'IT') {
-                    itArray.push(e)
-                }
-                else if (e['Land'] == 'NL') {
-                    nlArray.push(e)
-                }
-                else if (e['Land'] == 'UK') {
-                    ukArray.push(e)
-                }
-            })
-            newArray.push(collapseArrayIntoObject(deArray), collapseArrayIntoObject(frArray), collapseArrayIntoObject(itArray), collapseArrayIntoObject(nlArray), collapseArrayIntoObject(ukArray))
-        }
-    return newArray
- }
 
 /**
  * Collapse array of objects into single object (There must be a better way to do this...)
