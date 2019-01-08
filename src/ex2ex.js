@@ -30,12 +30,6 @@ const _ = require('lodash');
         groupByModel[oKey] = calculateNewObject(collapseArrayIntoObject(groupByModel[oKey]))
     })
 
-    Object.keys(groupByModel).reduce(() => {
-        
-    })
-
-    console.log(groupByModel)
-
     let newWb = createWorkbook()
     
     newWb = addSheetToWorkbook(newWb, parsedDataArray, "Raw Data")
