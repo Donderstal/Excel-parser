@@ -30,6 +30,9 @@ const _ = require('lodash');
         groupByModel[oKey] = calculateNewObject(collapseArrayIntoObject(groupByModel[oKey]))
     })
 
+    const addedObjectsArr = objectAdder(groupByModel) 
+    console.log(groupByModel)
+
     let newWb = createWorkbook()
     
     newWb = addSheetToWorkbook(newWb, parsedDataArray, "Raw Data")
@@ -39,6 +42,53 @@ const _ = require('lodash');
     exportNewWb(newWb, outputSheet)
 })()
 
+/**
+ * add Objects to arrays based on country
+ */
+function objectAdder(groupByModel) {
+    const rtArray = [], prArray = [], awArray = []
+    let result = []
+    Object.keys(groupByModel).forEach( (oKey,) => {
+        if (oKey.includes('RT')) {
+            rtArray.push(groupByModel[oKey])
+        }
+        else if (oKey.includes('PR')) {
+            prArray.push(groupByModel[oKey])
+        }
+        else if (oKey.includes('AW')) {
+            awArray.push(groupByModel[oKey])
+        }
+    })
+    const rtObject = (rtArray == []) ? {} : arrayReducer(rtArray)
+    const prObject = (prArray == []) ? {} : arrayReducer(prArray)
+    const awObject = (awArray == []) ? {} : arrayReducer(awArray)
+
+    return [ rtObject, prObject, awObject ]
+}
+
+/**
+ * Take array of Data Report objects and add their properties. Return single object with added properties
+ */
+function arrayReducer(array) {
+    return {
+        'Rijlabels': array['Land'],
+        'Budget spent': _.sumBy(array, (o) => { return o['Budget spent']; }),
+        'Impressions': _.sumBy(array, (o) => { return o['Impressions']; }),
+        'Website Clicks': _.sumBy(array, (o) => { return o['Website Clicks']; }),
+        'Website Visits': _.sumBy(array, (o) => { return o['Website Visits']; }),
+        'Purchases [28 Days PC]': _.sumBy(array, (o) => { return o['Purchases [28 Days PC]']; }),
+        'Purchases [7 Days PI]': _.sumBy(array, (o) => { return o['Purchases [7 Days PI]']; }),
+        'CPM €': _.sumBy(array, (o) => { return o['CPM €']; }),
+        'CPC €': _.sumBy(array, (o) => { return o['CPC €']; }),
+        'CTR %': _.sumBy(array, (o) => { return o['CTR %']; }),
+        'PC Con %': _.sumBy(array, (o) => { return o['PC Con %']; }),
+        'PI Con %': _.sumBy(array, (o) => { return o['PI Con %']; }),
+        'Cost per landing view': _.sumBy(array, (o) => { return o['Cost per landing view']; }),
+        'Cost per PC Con': _.sumBy(array, (o) => { return o['Cost per PC Con']; }),
+        'Cost per PI Con': _.sumBy(array, (o) => { return o['Cost per PI Con']; }),
+        'Som van Purch Con value (TOTAL)': _.sumBy(array, (o) => { return o['Som van Purch Con value (TOTAL)']; }),
+    }
+}
 
 /**
  * Turn object into Data Report-friendly object for excel sheet
@@ -124,7 +174,6 @@ function groupByModelCreater(dataArray) {
   const groupByModel = _.groupBy(dataArray, (row) => {
     return [row['Laag'], row['Land']];
   });
-  /* console.log(_.keys(groupByModel)); */
 
   return groupByModel;
 }
