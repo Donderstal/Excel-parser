@@ -32,6 +32,8 @@ const _ = require('lodash');
 
     const addedObjectsArr = objectAdder(groupByModel) 
 
+    console.log(addedObjectsArr)
+
     let newWb = createWorkbook()
     
     newWb = addSheetToWorkbook(newWb, parsedDataArray, "Raw Data")
@@ -47,12 +49,7 @@ const _ = require('lodash');
  * Take Excel workbook as input and return first sheet as an array of Json objects
  */
 function inputExcelToJSON(inputSheet) {
-    /* try { */
-        const workbook = XLSX.readFile(inputSheet)
-/*     }
-    catch(error) {
-
-    } */
+    const workbook = XLSX.readFile(inputSheet)
     const rawDataArray = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]])
     return rawDataArray
 }
@@ -159,9 +156,9 @@ function calculateNewObject(obj) {
         'Purchases [7 Days PI]': obj.Purchases7,
         'CPM €': ((obj.AmountSpent * 1000) / obj.Impressions),
         'CPC €': (obj.AmountSpent / obj.WebsiteClicks),
-        'CTR %': (obj.WebsiteClicks / obj.Impressions),
-        'PC Con %':(obj.Purchases28 / obj.WebsiteClicks),
-        'PI Con %': (obj.Purchases7 / obj.Impressions),
+        'CTR %': ((obj.WebsiteClicks / obj.Impressions) * 100).toFixed(2) + " %",
+        'PC Con %':((obj.Purchases28 / obj.WebsiteClicks) * 100).toFixed(2) + " %",
+        'PI Con %': (obj.Purchases7 / obj.Impressions).toFixed(4) + " %",
         'Cost per landing view': (obj.AmountSpent / obj.WebsiteContentViews),
         'Cost per PC Con': (obj.AmountSpent / obj.Purchases28),
         'Cost per PI Con': (obj.AmountSpent / obj.Purchases7),
@@ -173,7 +170,6 @@ function calculateNewObject(obj) {
  */
 function objectAdder(groupByModel) {
     const rtArray = [], prArray = [], awArray = []
-    let result = []
     Object.keys(groupByModel).forEach( (oKey,) => {
         if (oKey.includes('RT')) {
             rtArray.push(groupByModel[oKey])
@@ -211,9 +207,9 @@ function arrayReducer(array, type) {
         'Purchases [7 Days PI]': pu7,
         'CPM €': ((budSpent * 1000) / imp),
         'CPC €': (budSpent / clicks),
-        'CTR %': (clicks / imp),
-        'PC Con %': (pu28 / clicks),
-        'PI Con %': (pu7 / imp),
+        'CTR %': ((clicks / imp) * 100).toFixed(2) + " %",
+        'PC Con %': ((pu28 / clicks) * 100).toFixed(2) + " %",
+        'PI Con %': (pu7 / imp).toFixed(4) + " %",
         'Cost per landing view': (budSpent / visits),
         'Cost per PC Con': (budSpent / pu28),
         'Cost per PI Con': (budSpent / pu7),
