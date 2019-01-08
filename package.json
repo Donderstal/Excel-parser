@@ -1,0 +1,17 @@
+{
+    "name": "ex2ex",
+    "main": "lib/ex2ex.js",
+    "devDependencies": {
+        "babel-cli": "^6.26.0",
+        "babel-preset-flow": "^6.23.0",
+        "flow-bin": "^0.89.0"
+    },
+    "scripts": {
+        "build": "babel src/ -d lib/",
+        "prepublish": "npm run build",
+        "flow": "flow"
+    },
+    "dependencies": {
+        "xlsx": "^0.14.1"
+    }
+}
