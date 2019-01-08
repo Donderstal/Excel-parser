@@ -103,26 +103,42 @@ function editRawData(rawDataArray, keyArray) {
 
 /**
  * Create array of JSON objects based on analysisKeyArray
+ * finalModel will be something like: 
+ * { 
+ *  'PR': {
+ *    'NL': [{data}...]
+ *    ....
+ *    },
+ *  ...
+ *  }
  */
- function analyseParsedData(dataArray, analysisKeyArray) {
-    const prArray = [], rtArray = [], awArray = []
-    dataArray.forEach((e) => {
-        if (e['Laag'] == 'PR') {
-            prArray.push(e)
-        }
-        else if (e['Laag'] == 'RT') {
-            rtArray.push(e)
-        }
-        else if (e['Laag'] == 'AW') {
-            awArray.push(e)
-        }
-    })
-    const sortedPrArray = sortByCountry(prArray)
-    const sortedRtArray = sortByCountry(rtArray)
-    const sortedAwArray = sortByCountry(awArray)
-    const logArray = [sortedPrArray, sortedRtArray, sortedAwArray]
-    console.log(logArray)
- }
+function analyseParsedData(dataArray, analysisKeyArray) {
+  const prArray = [], rtArray = [], awArray = []
+  const finalModel = dataArray.reduce((acc, row) => {
+    const laagKey = row['Laag'];
+    // Guard when there is a falsy key this could also be a key check
+    if (laagKey == false) {
+      return acc;
+    }
+    // Check that child model if not already created
+    if (acc[laagKey] === undefined) {
+      acc[laagKey] = {
+        rawData: []
+      };
+    }
+    // Add it to the rawData
+    acc[laagKey].rawData.push(row);
+    // Don't forget to return the acc
+    return acc;
+  }, {});
+
+  const sortedPrArray = sortByCountry(prArray)
+  const sortedRtArray = sortByCountry(rtArray)
+  const sortedAwArray = sortByCountry(awArray)
+  const logArray = [sortedPrArray, sortedRtArray, sortedAwArray]
+  console.log(logArray)
+}
+
 
 /**
  * Sort by country
