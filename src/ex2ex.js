@@ -20,31 +20,21 @@ const _ = require('lodash');
         'Soort Ad 4'
     ]
 
-    const analysisKeyArray = [
-        'Rijlabels',
-        'Budget spent',
-        'Impressions',
-        'Website clicks',
-        'Website visits',
-        'Purchases (28 days)',
-        'Purchases (7 days)',
-        'CPM €',
-        'CPC €',
-        'CTR %',
-        'PC Conversion rate %',
-        'PI Conversion rate %',
-        'Cost per landing page view',
-        'Cost per PC Conversion €',
-        'Cost per PI Conversion €',
-        'Som van Purch Value (TOTAL)'
-    ]
-
     const rawDataArray = inputExcelToJSON(inputSheet)    
 
     const parsedDataArray = editRawData(rawDataArray, rawKeyArray)
 
-    const groupByModel = analyseParsedData(parsedDataArray, analysisKeyArray)
-  // reduce the group by model into a single object 
+    const groupByModel = groupByModelCreater(parsedDataArray)
+
+    Object.keys(groupByModel).map( (oKey,) => {
+        groupByModel[oKey] = calculateNewObject(collapseArrayIntoObject(groupByModel[oKey]))
+    })
+
+    Object.keys(groupByModel).reduce(() => {
+        
+    })
+
+    console.log(groupByModel)
 
     let newWb = createWorkbook()
     
@@ -54,6 +44,31 @@ const _ = require('lodash');
 
     exportNewWb(newWb, outputSheet)
 })()
+
+
+/**
+ * Turn object into Data Report-friendly object for excel sheet
+ */
+function calculateNewObject(obj) {
+    return {
+        'Rijlabels': obj.Land,
+        'Budget spent': obj.AmountSpent,
+        'Impressions': obj.Impressions,
+        'Website Clicks': obj.WebsiteClicks,
+        'Website Visits': obj.WebsiteContentViews,
+        'Purchases [28 Days PC]': obj.Purchases28,
+        'Purchases [7 Days PI]': obj.Purchases7,
+        'CPM €': ((obj.AmountSpent * 1000) / obj.Impressions),
+        'CPC €': (obj.AmountSpent / obj.WebsiteClicks),
+        'CTR %': (obj.WebsiteClicks / obj.Impressions),
+        'PC Con %':(obj.Purchases28 / obj.WebsiteClicks),
+        'PI Con %': (obj.Purchases7 / obj.Impressions),
+        'Cost per landing view': (obj.AmountSpent / obj.WebsiteContentViews),
+        'Cost per PC Con': (obj.AmountSpent / obj.Purchases28),
+        'Cost per PI Con': (obj.AmountSpent / obj.Purchases7),
+        'Som van Purch Con value (TOTAL)': (obj.Purchases28 + obj.Purchases7)
+    }
+}
 
 
 /**
@@ -110,12 +125,12 @@ function editRawData(rawDataArray, keyArray) {
  *  [PR,NL]: [{data}, {data2}, ...]
  *  }
  */
-function analyseParsedData(dataArray, analysisKeyArray) {
+function groupByModelCreater(dataArray) {
   // group By Laag Key and Land Key
   const groupByModel = _.groupBy(dataArray, (row) => {
     return [row['Laag'], row['Land']];
   });
-  console.log(_.keys(groupByModel));
+  /* console.log(_.keys(groupByModel)); */
 
   return groupByModel;
 }
