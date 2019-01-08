@@ -107,13 +107,13 @@ function editRawData(rawDataArray, keyArray) {
  * Create array of JSON objects based on analysisKeyArray
  * finalModel will be something like: 
  * { 
- *  'PR:NL': [{data}, {data2}, ...]
+ *  [PR,NL]: [{data}, {data2}, ...]
  *  }
  */
 function analyseParsedData(dataArray, analysisKeyArray) {
   // group By Laag Key and Land Key
   const groupByModel = _.groupBy(dataArray, (row) => {
-    return row['Laag'] + ':' + row['Land'];
+    return [row['Laag'], row['Land']];
   });
   console.log(_.keys(groupByModel));
 
