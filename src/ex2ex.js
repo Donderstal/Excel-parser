@@ -103,7 +103,7 @@ function groupByModelCreater(dataArray) {
   
     return groupByModel;
   }
-  /**
+/**
  * Collapse array of objects into single object (There must be a better way to do this...)
  */
 function collapseArrayIntoObject(array) {
