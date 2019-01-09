@@ -183,9 +183,9 @@ function makeLaagDataRows(groupByModel) {
             awArray.push(groupByModel[oKey])
         }
     })
-    const rtObject = (rtArray == []) ? {} : rowsReducer(rtArray, 'RT')
-    const prObject = (prArray == []) ? {} : rowsReducer(prArray, 'PR')
-    const awObject = (awArray == []) ? {} : rowsReducer(awArray, 'AW')
+    const rtObject = (rtArray.length === 0) ? {} : rowsReducer(rtArray, 'RT')
+    const prObject = (prArray.length === 0) ? {} : rowsReducer(prArray, 'PR')
+    const awObject = (awArray.length === 0) ? {} : rowsReducer(awArray, 'AW')
 
     return [ {}, rtObject, ...rtArray, {}, prObject, ...prArray, {}, awObject, ...awArray ]
 }
