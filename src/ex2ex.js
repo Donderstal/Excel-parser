@@ -3,9 +3,9 @@ const XLSX = require('xlsx');
 const _ = require('lodash');
 
 (function(){
-    const inputSheet = ("./oldExcel/" + process.argv[2] + ".xlsx")
+    const inputSheet = process.argv[2]
     
-    const outputSheet = ("./newExcel/" + process.argv[3] + ".xlsx")
+    const outputSheet = process.argv[3]
     
     const rawKeyArray = [
         'Klant',
