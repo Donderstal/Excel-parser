@@ -1,10 +1,11 @@
 // @flow
-    const XLSX = require('xlsx');
+const XLSX = require('xlsx');
+const _ = require('lodash');
 
 (function(){
-    const inputSheet = ("./oldExcel/" + process.argv[2] + ".xlsx")
+    const inputSheet = process.argv[2]
     
-    const outputSheet = ("./newExcel/" + process.argv[3] + ".xlsx")
+    const outputSheet = process.argv[3]
     
     const rawKeyArray = [
         'Klant',
@@ -19,40 +20,29 @@
         'Soort Ad 4'
     ]
 
-    const analysisKeyArray = [
-        'Rijlabels',
-        'Budget spent',
-        'Impressions',
-        'Website clicks',
-        'Website visits',
-        'Purchases (28 days)',
-        'Purchases (7 days)',
-        'CPM €',
-        'CPC €',
-        'CTR %',
-        'PC Conversion rate %',
-        'PI Conversion rate %',
-        'Cost per landing page view',
-        'Cost per PC Conversion €',
-        'Cost per PI Conversion €',
-        'Som van Purch Value (TOTAL)'
-    ]
-
     const rawDataArray = inputExcelToJSON(inputSheet)    
 
     const parsedDataArray = editRawData(rawDataArray, rawKeyArray)
 
-    analyseParsedData(parsedDataArray, analysisKeyArray)
+    const groupByModel = groupByModelCreater(parsedDataArray)
+
+    Object.keys(groupByModel).map( (oKey,) => {
+        const countryRows = groupByModel[oKey]
+        groupByModel[oKey] = makeDataReportRow(reduceCountryRows(countryRows))
+    })
+
+    const dataReportRows = makeLaagDataRows(groupByModel) 
 
     let newWb = createWorkbook()
     
     newWb = addSheetToWorkbook(newWb, parsedDataArray, "Raw Data")
     
-    newWb = addSheetToWorkbook(newWb, [{'Test': 'Test'}, {' Test2': 'Test2'}], "Data Analysis")
+    newWb = addSheetToWorkbook(newWb, dataReportRows , "Data Analysis")
 
     exportNewWb(newWb, outputSheet)
 })()
 
+//Functions in order of appearance in above IIFE
 
 /**
  * Take Excel workbook as input and return first sheet as an array of Json objects
@@ -62,13 +52,12 @@ function inputExcelToJSON(inputSheet) {
     const rawDataArray = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]])
     return rawDataArray
 }
-
 /**
  * Take array of JSON objects as input and expand it with keys from the keyarray and values parsed from original excel
  */
 function editRawData(rawDataArray, keyArray) {
     const newArray = []
-        rawDataArray.forEach((e, index) => {
+        rawDataArray.forEach((e) => {
             const testObject = {}
             let campaignNameArr = e['Campaign Name'].split('_')
 
@@ -100,64 +89,25 @@ function editRawData(rawDataArray, keyArray) {
     })
     return newArray
 }
-
 /**
  * Create array of JSON objects based on analysisKeyArray
+ * finalModel will be something like: 
+ * { 
+ *  [PR,NL]: [{data}, {data2}, ...]
+ *  }
  */
- function analyseParsedData(dataArray, analysisKeyArray) {
-    const prArray = [], rtArray = [], awArray = []
-    dataArray.forEach((e) => {
-        if (e['Laag'] == 'PR') {
-            prArray.push(e)
-        }
-        else if (e['Laag'] == 'RT') {
-            rtArray.push(e)
-        }
-        else if (e['Laag'] == 'AW') {
-            awArray.push(e)
-        }
-    })
-    const sortedPrArray = sortByCountry(prArray)
-    const sortedRtArray = sortByCountry(rtArray)
-    const sortedAwArray = sortByCountry(awArray)
-    const logArray = [sortedPrArray, sortedRtArray, sortedAwArray]
-    console.log(logArray)
- }
-
+function groupByModelCreater(dataArray) {
+    // group By Laag Key and Land Key
+    const groupByModel = _.groupBy(dataArray, (row) => {
+      return [row['Laag'], row['Land']];
+    });
+  
+    return groupByModel;
+  }
 /**
- * Sort by country
+ * Collapse array of row into single object
  */
- function sortByCountry(array) {
-    const newArray = []
-        if (array.length > 0) {
-            let deArray = [], frArray = [], itArray = [], nlArray = [], ukArray = []
-            array.forEach((e) => {
-                if (e['Land'] == 'DE') {
-                    deArray.push(e)
-                }
-                else if (e['Land'] == 'FR') {
-                    frArray.push(e)
-                }
-                else if (e['Land'] == 'IT') {
-                    itArray.push(e)
-                }
-                else if (e['Land'] == 'NL') {
-                    nlArray.push(e)
-                }
-                else if (e['Land'] == 'UK') {
-                    ukArray.push(e)
-                }
-            })
-            newArray.push(collapseArrayIntoObject(deArray), collapseArrayIntoObject(frArray), collapseArrayIntoObject(itArray), collapseArrayIntoObject(nlArray), collapseArrayIntoObject(ukArray))
-        }
-    return newArray
- }
-
-/**
- * Collapse array of objects into single object (There must be a better way to do this...)
- */
-
- function collapseArrayIntoObject(array) {
+function reduceCountryRows(array) {
     let returnObject = {
         Land: array[0]['Land'],
         Impressions: 0,
@@ -171,20 +121,19 @@ function editRawData(rawDataArray, keyArray) {
 
     array.forEach((e) => {
         returnObject.Impressions += e.Impressions
-        returnObject.AmountSpent += mathHelper(e['Amount Spent (EUR)'])
-        returnObject.WebsiteClicks += mathHelper(e['Link Clicks'])
-        returnObject.WebsiteContentViews += mathHelper(e['Website Content Views'])
-        returnObject.Purchases7 += mathHelper(e['Purchases [7 Days After Viewing]'])
-        returnObject.Purchases28 += mathHelper(e['Purchases [28 Days After Clicking]'])
-        returnObject.UniquePurchases += (mathHelper(e['Unique Purchases [7 Days After Viewing]']) + mathHelper(e['Unique Purchases [28 Days After Clicking]']))
+        returnObject.AmountSpent += typeParser(e['Amount Spent (EUR)'])
+        returnObject.WebsiteClicks += typeParser(e['Link Clicks'])
+        returnObject.WebsiteContentViews += typeParser(e['Website Content Views'])
+        returnObject.Purchases7 += typeParser(e['Purchases [7 Days After Viewing]'])
+        returnObject.Purchases28 += typeParser(e['Purchases [28 Days After Clicking]'])
+        returnObject.UniquePurchases += (typeParser(e['Unique Purchases [7 Days After Viewing]']) + typeParser(e['Unique Purchases [28 Days After Clicking]']))
     })
    return returnObject
  }
-
 /**
- * Mathhelper (checks for empty strings and converts string to numbers)
+ * typeParser (checks for empty strings and converts string to numbers)
  */
- function mathHelper(input) {
+function typeParser(input) {
     if (input == '') {
         return 0
     }
@@ -192,17 +141,90 @@ function editRawData(rawDataArray, keyArray) {
         return parseFloat(input)
     }
  }
+ /**
+ * Turn object into Data Report-friendly object for excel sheet
+ * takes original excel row
+ * returns new (calculated) excel row
+ */
+function makeDataReportRow(obj) {
+    return {
+        'Rijlabels': obj.Land,
+        'Budget spent': obj.AmountSpent,
+        'Impressions': obj.Impressions,
+        'Website Clicks': obj.WebsiteClicks,
+        'Website Visits': obj.WebsiteContentViews,
+        'Purchases [28 Days PC]': obj.Purchases28,
+        'Purchases [7 Days PI]': obj.Purchases7,
+        'CPM €': ((obj.AmountSpent * 1000) / obj.Impressions),
+        'CPC €': (obj.AmountSpent / obj.WebsiteClicks),
+        'CTR %': ((obj.WebsiteClicks / obj.Impressions) * 100).toFixed(2) + " %",
+        'PC Con %':((obj.Purchases28 / obj.WebsiteClicks) * 100).toFixed(2) + " %",
+        'PI Con %': (obj.Purchases7 / obj.Impressions).toFixed(4) + " %",
+        'Cost per landing view': (obj.AmountSpent / obj.WebsiteContentViews),
+        'Cost per PC Con': (obj.AmountSpent / obj.Purchases28),
+        'Cost per PI Con': (obj.AmountSpent / obj.Purchases7),
+        'Som van Purch Con value (TOTAL)': (obj.Purchases28 + obj.Purchases7)
+    }
+}
+/**
+ * take groupByModel
+ * Returns new excelsheet array of row objects
+ */
+function makeLaagDataRows(groupByModel) { 
+    const rtArray = [], prArray = [], awArray = []
+    Object.keys(groupByModel).forEach( (oKey,) => {
+        if (oKey.includes('RT')) {
+            rtArray.push(groupByModel[oKey])
+        }
+        else if (oKey.includes('PR')) {
+            prArray.push(groupByModel[oKey])
+        }
+        else if (oKey.includes('AW')) {
+            awArray.push(groupByModel[oKey])
+        }
+    })
+    const rtObject = (rtArray.length === 0) ? {} : rowsReducer(rtArray, 'RT')
+    const prObject = (prArray.length === 0) ? {} : rowsReducer(prArray, 'PR')
+    const awObject = (awArray.length === 0) ? {} : rowsReducer(awArray, 'AW')
 
-
+    return [ {}, rtObject, ...rtArray, {}, prObject, ...prArray, {}, awObject, ...awArray ]
+}
+/**
+ * Take array of Data Report objects and add their properties. Return single object with added properties
+ */
+function rowsReducer(array, type) {
+    const budSpent = _.sumBy(array, (o) => { return o['Budget spent']; })
+    const imp = _.sumBy(array, (o) => { return o['Impressions']; })
+    const clicks = _.sumBy(array, (o) => { return o['Website Clicks']; })
+    const visits = _.sumBy(array, (o) => { return o['Website Visits']; })
+    const pu28 = _.sumBy(array, (o) => { return o['Purchases [28 Days PC]']; })
+    const pu7 = _.sumBy(array, (o) => { return o['Purchases [7 Days PI]']; })
+    return {
+        'Rijlabels': type,
+        'Budget spent': budSpent,
+        'Impressions': imp,
+        'Website Clicks': clicks,
+        'Website Visits': visits,
+        'Purchases [28 Days PC]': pu28,
+        'Purchases [7 Days PI]': pu7,
+        'CPM €': ((budSpent * 1000) / imp),
+        'CPC €': (budSpent / clicks),
+        'CTR %': ((clicks / imp) * 100).toFixed(2) + " %",
+        'PC Con %': ((pu28 / clicks) * 100).toFixed(2) + " %",
+        'PI Con %': (pu7 / imp).toFixed(4) + " %",
+        'Cost per landing view': (budSpent / visits),
+        'Cost per PC Con': (budSpent / pu28),
+        'Cost per PI Con': (budSpent / pu7),
+        'Som van Purch Con value (TOTAL)': (pu28 + pu7),
+    }
+}
 /**
  * Create new Excel workbook 
  */
-
  function createWorkbook () {
      const newWb = XLSX.utils.book_new()
      return newWb
- }
-
+}
 /**
  * Take array of JSON objects as input, convert it to a sheet and return Excel workbook with sheet in it
  */
@@ -211,7 +233,6 @@ function addSheetToWorkbook (newWb, newDataArray, newSheetName) {
     XLSX.utils.book_append_sheet(newWb, newSheet, newSheetName)
     return newWb
 }
-
 /**
  * Export new Excel workbook to location passed in cli
  */
