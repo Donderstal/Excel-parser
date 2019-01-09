@@ -81,6 +81,6 @@ Always remember to add the .xlsx extension to the new Excel file in the command 
 Please keep in mind that this program is specifically designed to work with Facebok's 'Weekly Ad Report'. 
 Usage with Excel sheets in different formats will lead to errors and unexpected behavior.
 
-As of the writing of this readMe, there is a problem with the new Excel files which sometimes cause a warning to pop up when you wish to open the new file with Excel. (Something like: 'We found a problem with some content in 'newExcel.xlsx'. Do you want us to try to recover as much as we can? If you trust the source of this workbook, click Yes.')
-
+As of the writing of this readMe, there is a problem with the new Excel files which sometimes cause a warning to pop up when you wish to open the new file with Excel. 
+(Something like: 'We found a problem with some content in 'newExcel.xlsx'. Do you want us to try to recover as much as we can? If you trust the source of this workbook, click Yes.')
 Please click 'yes' when prompted to and the file should open normally.

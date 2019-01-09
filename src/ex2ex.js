@@ -27,16 +27,17 @@ const _ = require('lodash');
     const groupByModel = groupByModelCreater(parsedDataArray)
 
     Object.keys(groupByModel).map( (oKey,) => {
-        groupByModel[oKey] = calculateNewObject(collapseArrayIntoObject(groupByModel[oKey]))
+        const countryRows = groupByModel[oKey]
+        groupByModel[oKey] = makeDataReportRow(reduceCountryRows(countryRows))
     })
 
-    const addedObjectsArr = objectAdder(groupByModel) 
+    const dataReportRows = makeLaagDataRows(groupByModel) 
 
     let newWb = createWorkbook()
     
     newWb = addSheetToWorkbook(newWb, parsedDataArray, "Raw Data")
     
-    newWb = addSheetToWorkbook(newWb, addedObjectsArr, "Data Analysis")
+    newWb = addSheetToWorkbook(newWb, dataReportRows , "Data Analysis")
 
     exportNewWb(newWb, outputSheet)
 })()
@@ -104,9 +105,9 @@ function groupByModelCreater(dataArray) {
     return groupByModel;
   }
 /**
- * Collapse array of objects into single object (There must be a better way to do this...)
+ * Collapse array of row into single object
  */
-function collapseArrayIntoObject(array) {
+function reduceCountryRows(array) {
     let returnObject = {
         Land: array[0]['Land'],
         Impressions: 0,
@@ -142,8 +143,10 @@ function typeParser(input) {
  }
  /**
  * Turn object into Data Report-friendly object for excel sheet
+ * takes original excel row
+ * returns new (calculated) excel row
  */
-function calculateNewObject(obj) {
+function makeDataReportRow(obj) {
     return {
         'Rijlabels': obj.Land,
         'Budget spent': obj.AmountSpent,
@@ -164,9 +167,10 @@ function calculateNewObject(obj) {
     }
 }
 /**
- * add Objects to arrays based on country
+ * take groupByModel
+ * Returns new excelsheet array of row objects
  */
-function objectAdder(groupByModel) {
+function makeLaagDataRows(groupByModel) { 
     const rtArray = [], prArray = [], awArray = []
     Object.keys(groupByModel).forEach( (oKey,) => {
         if (oKey.includes('RT')) {
@@ -179,16 +183,16 @@ function objectAdder(groupByModel) {
             awArray.push(groupByModel[oKey])
         }
     })
-    const rtObject = (rtArray == []) ? {} : arrayReducer(rtArray, 'RT')
-    const prObject = (prArray == []) ? {} : arrayReducer(prArray, 'PR')
-    const awObject = (awArray == []) ? {} : arrayReducer(awArray, 'AW')
+    const rtObject = (rtArray == []) ? {} : rowsReducer(rtArray, 'RT')
+    const prObject = (prArray == []) ? {} : rowsReducer(prArray, 'PR')
+    const awObject = (awArray == []) ? {} : rowsReducer(awArray, 'AW')
 
     return [ {}, rtObject, ...rtArray, {}, prObject, ...prArray, {}, awObject, ...awArray ]
 }
 /**
  * Take array of Data Report objects and add their properties. Return single object with added properties
  */
-function arrayReducer(array, type) {
+function rowsReducer(array, type) {
     const budSpent = _.sumBy(array, (o) => { return o['Budget spent']; })
     const imp = _.sumBy(array, (o) => { return o['Impressions']; })
     const clicks = _.sumBy(array, (o) => { return o['Website Clicks']; })
