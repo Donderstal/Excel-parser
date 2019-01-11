@@ -1,46 +1,34 @@
-// @flow
 const XLSX = require('xlsx');
 const _ = require('lodash');
 
-(function(){
-    const inputSheet = process.argv[2]
-    
-    const outputSheet = process.argv[3]
-    
-    const rawKeyArray = [
-        'Klant',
-        'Jaar',
-        'Laag',
-        'Campagne',
-        'Land',
-        'Doelgroep',
-        'Soort Ad 1',
-        'Soort Ad 2',
-        'Soort Ad 3',
-        'Soort Ad 4'
-    ]
+(function () {
+    const inputSheet = process.argv[2];
 
-    const rawDataArray = inputExcelToJSON(inputSheet)    
+    const outputSheet = process.argv[3];
 
-    const parsedDataArray = editRawData(rawDataArray, rawKeyArray)
+    const rawKeyArray = ['Klant', 'Jaar', 'Laag', 'Campagne', 'Land', 'Doelgroep', 'Soort Ad 1', 'Soort Ad 2', 'Soort Ad 3', 'Soort Ad 4'];
 
-    const groupByModel = groupByModelCreater(parsedDataArray)
+    const rawDataArray = inputExcelToJSON(inputSheet);
 
-    Object.keys(groupByModel).map( (oKey,) => {
-        const countryRows = groupByModel[oKey]
-        groupByModel[oKey] = makeDataReportRow(reduceCountryRows(countryRows))
-    })
+    const parsedDataArray = editRawData(rawDataArray, rawKeyArray);
 
-    const dataReportRows = makeLaagDataRows(groupByModel) 
+    const groupByModel = groupByModelCreater(parsedDataArray);
 
-    let newWb = createWorkbook()
-    
-    newWb = addSheetToWorkbook(newWb, parsedDataArray, "Raw Data")
-    
-    newWb = addSheetToWorkbook(newWb, dataReportRows , "Data Analysis")
+    Object.keys(groupByModel).map(oKey => {
+        const countryRows = groupByModel[oKey];
+        groupByModel[oKey] = makeDataReportRow(reduceCountryRows(countryRows));
+    });
 
-    exportNewWb(newWb, outputSheet)
-})()
+    const dataReportRows = makeLaagDataRows(groupByModel);
+
+    let newWb = createWorkbook();
+
+    newWb = addSheetToWorkbook(newWb, parsedDataArray, "Raw Data");
+
+    newWb = addSheetToWorkbook(newWb, dataReportRows, "Data Analysis");
+
+    exportNewWb(newWb, outputSheet);
+})();
 
 //Functions in order of appearance in above IIFE
 
@@ -48,46 +36,46 @@ const _ = require('lodash');
  * Take Excel workbook as input and return first sheet as an array of Json objects
  */
 function inputExcelToJSON(inputSheet) {
-    const workbook = XLSX.readFile(inputSheet)
-    const rawDataArray = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]])
-    return rawDataArray
+    const workbook = XLSX.readFile(inputSheet);
+    const rawDataArray = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+    return rawDataArray;
 }
 /**
  * Take array of JSON objects as input and expand it with keys from the keyarray and values parsed from original excel
  */
 function editRawData(rawDataArray, keyArray) {
-    const newArray = []
-        rawDataArray.forEach((e) => {
-            const testObject = {}
-            let campaignNameArr = e['Campaign Name'].split('_')
+    const newArray = [];
+    rawDataArray.forEach(e => {
+        const testObject = {};
+        let campaignNameArr = e['Campaign Name'].split('_');
 
-            if (campaignNameArr.length > 5) {
-                campaignNameArr.pop()
+        if (campaignNameArr.length > 5) {
+            campaignNameArr.pop();
+        }
+
+        let adSetNameArr = e['Ad Set Name'].split('_')[1];
+        let adNameArr = e['Ad Name'].split('_');
+
+        if (adNameArr.length > 1) {
+            if (adNameArr[0].length <= 2 && adNameArr[1].length <= 2) {
+                adNameArr.shift();
+                adNameArr.shift();
             }
+        }
 
-            let adSetNameArr = e['Ad Set Name'].split('_')[1]
-            let adNameArr = e['Ad Name'].split('_')
+        let valueArray = [...campaignNameArr, adSetNameArr, ...adNameArr];
 
-            if (adNameArr.length > 1) {
-                if (adNameArr[0].length <= 2 && adNameArr[1].length <= 2) {
-                    adNameArr.shift()
-                    adNameArr.shift()
-                }
-            }
+        for (i = 0; i < keyArray.length; i++) {
+            testObject[keyArray[i]] = valueArray[i];
+        }
 
-            let valueArray = [...campaignNameArr, adSetNameArr, ...adNameArr]
-
-            for (i = 0; i < keyArray.length; i++) {
-                testObject[keyArray[i]] = valueArray[i]
-            }
-
-            delete e['Campaign Name']
-            delete e['Ad Name']
-            delete e['Ad Set Name']
-            let returnObject = Object.assign({}, testObject, e)
-            newArray.push(returnObject)
-    })
-    return newArray
+        delete e['Campaign Name'];
+        delete e['Ad Name'];
+        delete e['Ad Set Name'];
+        let returnObject = Object.assign({}, testObject, e);
+        newArray.push(returnObject);
+    });
+    return newArray;
 }
 /**
  * Create array of JSON objects based on analysisKeyArray
@@ -98,12 +86,12 @@ function editRawData(rawDataArray, keyArray) {
  */
 function groupByModelCreater(dataArray) {
     // group By Laag Key and Land Key
-    const groupByModel = _.groupBy(dataArray, (row) => {
-      return [row['Laag'], row['Land']];
+    const groupByModel = _.groupBy(dataArray, row => {
+        return [row['Laag'], row['Land']];
     });
-  
+
     return groupByModel;
-  }
+}
 /**
  * Collapse array of row into single object
  */
@@ -117,35 +105,34 @@ function reduceCountryRows(array) {
         Purchases7: 0,
         Purchases28: 0,
         UniquePurchases: 0
-    }
+    };
 
-    array.forEach((e) => {
-        returnObject.Impressions += e.Impressions
-        returnObject.AmountSpent += typeParser(e['Amount Spent (EUR)'])
-        returnObject.WebsiteClicks += typeParser(e['Link Clicks'])
-        returnObject.WebsiteContentViews += typeParser(e['Website Content Views'])
-        returnObject.Purchases7 += typeParser(e['Purchases [7 Days After Viewing]'])
-        returnObject.Purchases28 += typeParser(e['Purchases [28 Days After Clicking]'])
-        returnObject.UniquePurchases += (typeParser(e['Unique Purchases [7 Days After Viewing]']) + typeParser(e['Unique Purchases [28 Days After Clicking]']))
-    })
-   return returnObject
- }
+    array.forEach(e => {
+        returnObject.Impressions += e.Impressions;
+        returnObject.AmountSpent += typeParser(e['Amount Spent (EUR)']);
+        returnObject.WebsiteClicks += typeParser(e['Link Clicks']);
+        returnObject.WebsiteContentViews += typeParser(e['Website Content Views']);
+        returnObject.Purchases7 += typeParser(e['Purchases [7 Days After Viewing]']);
+        returnObject.Purchases28 += typeParser(e['Purchases [28 Days After Clicking]']);
+        returnObject.UniquePurchases += typeParser(e['Unique Purchases [7 Days After Viewing]']) + typeParser(e['Unique Purchases [28 Days After Clicking]']);
+    });
+    return returnObject;
+}
 /**
  * typeParser (checks for empty strings and converts string to numbers)
  */
 function typeParser(input) {
     if (input == '') {
-        return 0
+        return 0;
+    } else {
+        return parseFloat(input);
     }
-    else {
-        return parseFloat(input)
-    }
- }
- /**
- * Turn object into Data Report-friendly object for excel sheet
- * takes original excel row
- * returns new (calculated) excel row
- */
+}
+/**
+* Turn object into Data Report-friendly object for excel sheet
+* takes original excel row
+* returns new (calculated) excel row
+*/
 function makeDataReportRow(obj) {
     return {
         'Rijlabels': obj.Land,
@@ -155,50 +142,62 @@ function makeDataReportRow(obj) {
         'Website Visits': obj.WebsiteContentViews,
         'Purchases [28 Days PC]': obj.Purchases28,
         'Purchases [7 Days PI]': obj.Purchases7,
-        'CPM €': ((obj.AmountSpent * 1000) / obj.Impressions),
-        'CPC €': (obj.AmountSpent / obj.WebsiteClicks),
-        'CTR %': ((obj.WebsiteClicks / obj.Impressions) * 100).toFixed(2) + " %",
-        'PC Con %':((obj.Purchases28 / obj.WebsiteClicks) * 100).toFixed(2) + " %",
+        'CPM €': obj.AmountSpent * 1000 / obj.Impressions,
+        'CPC €': obj.AmountSpent / obj.WebsiteClicks,
+        'CTR %': (obj.WebsiteClicks / obj.Impressions * 100).toFixed(2) + " %",
+        'PC Con %': (obj.Purchases28 / obj.WebsiteClicks * 100).toFixed(2) + " %",
         'PI Con %': (obj.Purchases7 / obj.Impressions).toFixed(4) + " %",
-        'Cost per landing view': (obj.AmountSpent / obj.WebsiteContentViews),
-        'Cost per PC Con': (obj.AmountSpent / obj.Purchases28),
-        'Cost per PI Con': (obj.AmountSpent / obj.Purchases7),
-        'Som van Purch Con value (TOTAL)': (obj.Purchases28 + obj.Purchases7)
-    }
+        'Cost per landing view': obj.AmountSpent / obj.WebsiteContentViews,
+        'Cost per PC Con': obj.AmountSpent / obj.Purchases28,
+        'Cost per PI Con': obj.AmountSpent / obj.Purchases7,
+        'Som van Purch Con value (TOTAL)': obj.Purchases28 + obj.Purchases7
+    };
 }
 /**
  * take groupByModel
  * Returns new excelsheet array of row objects
  */
-function makeLaagDataRows(groupByModel) { 
-    const rtArray = [], prArray = [], awArray = []
-    Object.keys(groupByModel).forEach( (oKey,) => {
+function makeLaagDataRows(groupByModel) {
+    const rtArray = [],
+          prArray = [],
+          awArray = [];
+    Object.keys(groupByModel).forEach(oKey => {
         if (oKey.includes('RT')) {
-            rtArray.push(groupByModel[oKey])
+            rtArray.push(groupByModel[oKey]);
+        } else if (oKey.includes('PR')) {
+            prArray.push(groupByModel[oKey]);
+        } else if (oKey.includes('AW')) {
+            awArray.push(groupByModel[oKey]);
         }
-        else if (oKey.includes('PR')) {
-            prArray.push(groupByModel[oKey])
-        }
-        else if (oKey.includes('AW')) {
-            awArray.push(groupByModel[oKey])
-        }
-    })
-    const rtObject = (rtArray.length === 0) ? {} : rowsReducer(rtArray, 'RT')
-    const prObject = (prArray.length === 0) ? {} : rowsReducer(prArray, 'PR')
-    const awObject = (awArray.length === 0) ? {} : rowsReducer(awArray, 'AW')
+    });
+    const rtObject = rtArray.length === 0 ? {} : rowsReducer(rtArray, 'RT');
+    const prObject = prArray.length === 0 ? {} : rowsReducer(prArray, 'PR');
+    const awObject = awArray.length === 0 ? {} : rowsReducer(awArray, 'AW');
 
-    return [ {}, rtObject, ...rtArray, {}, prObject, ...prArray, {}, awObject, ...awArray ]
+    return [{}, rtObject, ...rtArray, {}, prObject, ...prArray, {}, awObject, ...awArray];
 }
 /**
  * Take array of Data Report objects and add their properties. Return single object with added properties
  */
 function rowsReducer(array, type) {
-    const budSpent = _.sumBy(array, (o) => { return o['Budget spent']; })
-    const imp = _.sumBy(array, (o) => { return o['Impressions']; })
-    const clicks = _.sumBy(array, (o) => { return o['Website Clicks']; })
-    const visits = _.sumBy(array, (o) => { return o['Website Visits']; })
-    const pu28 = _.sumBy(array, (o) => { return o['Purchases [28 Days PC]']; })
-    const pu7 = _.sumBy(array, (o) => { return o['Purchases [7 Days PI]']; })
+    const budSpent = _.sumBy(array, o => {
+        return o['Budget spent'];
+    });
+    const imp = _.sumBy(array, o => {
+        return o['Impressions'];
+    });
+    const clicks = _.sumBy(array, o => {
+        return o['Website Clicks'];
+    });
+    const visits = _.sumBy(array, o => {
+        return o['Website Visits'];
+    });
+    const pu28 = _.sumBy(array, o => {
+        return o['Purchases [28 Days PC]'];
+    });
+    const pu7 = _.sumBy(array, o => {
+        return o['Purchases [7 Days PI]'];
+    });
     return {
         'Rijlabels': type,
         'Budget spent': budSpent,
@@ -207,35 +206,35 @@ function rowsReducer(array, type) {
         'Website Visits': visits,
         'Purchases [28 Days PC]': pu28,
         'Purchases [7 Days PI]': pu7,
-        'CPM €': ((budSpent * 1000) / imp),
-        'CPC €': (budSpent / clicks),
-        'CTR %': ((clicks / imp) * 100).toFixed(2) + " %",
-        'PC Con %': ((pu28 / clicks) * 100).toFixed(2) + " %",
+        'CPM €': budSpent * 1000 / imp,
+        'CPC €': budSpent / clicks,
+        'CTR %': (clicks / imp * 100).toFixed(2) + " %",
+        'PC Con %': (pu28 / clicks * 100).toFixed(2) + " %",
         'PI Con %': (pu7 / imp).toFixed(4) + " %",
-        'Cost per landing view': (budSpent / visits),
-        'Cost per PC Con': (budSpent / pu28),
-        'Cost per PI Con': (budSpent / pu7),
-        'Som van Purch Con value (TOTAL)': (pu28 + pu7),
-    }
+        'Cost per landing view': budSpent / visits,
+        'Cost per PC Con': budSpent / pu28,
+        'Cost per PI Con': budSpent / pu7,
+        'Som van Purch Con value (TOTAL)': pu28 + pu7
+    };
 }
 /**
  * Create new Excel workbook 
  */
- function createWorkbook () {
-     const newWb = XLSX.utils.book_new()
-     return newWb
+function createWorkbook() {
+    const newWb = XLSX.utils.book_new();
+    return newWb;
 }
 /**
  * Take array of JSON objects as input, convert it to a sheet and return Excel workbook with sheet in it
  */
-function addSheetToWorkbook (newWb, newDataArray, newSheetName) {
-    const newSheet = XLSX.utils.json_to_sheet(newDataArray)
-    XLSX.utils.book_append_sheet(newWb, newSheet, newSheetName)
-    return newWb
+function addSheetToWorkbook(newWb, newDataArray, newSheetName) {
+    const newSheet = XLSX.utils.json_to_sheet(newDataArray);
+    XLSX.utils.book_append_sheet(newWb, newSheet, newSheetName);
+    return newWb;
 }
 /**
  * Export new Excel workbook to location passed in cli
  */
 function exportNewWb(newWb, outputSheet) {
-    XLSX.writeFile(newWb, outputSheet)
+    XLSX.writeFile(newWb, outputSheet);
 }
