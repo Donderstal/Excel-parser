@@ -4,6 +4,24 @@ Node program that can help with the automation of campaign management
 This program is designed to be a time saving application that can process Excel files received from Facebook into a desired format.
 Installing it properly might be a little bit challenging, but after installation, usage should be easy enough.
 
+## usage
+Ex2Ex is run through the terminal. If everything is installed correctly, using it should be very easy.
+The commands in the terminal should look as follows:
+
+    node /users/example/ex2ex/src/ex2ex.js /users/example/documents/oldExcel.xlsx /users/example/documents/newExcel.xlsx
+
+The command consists of four parts. The first is the 'node' command. The second is the location of the ex2ex.js file. The third is the Excel file you wish to process. The fourth is the name and location of the new Excel file after processing.
+The path of the ex2ex.js file and the old Excel file are easily obtained by simply dragging and dropping the file into the terminal, just like you would when attaching a file to an email.
+Always remember to add the .xlsx extension to the new Excel file in the command line, or else it won't render as a readable Excel sheet
+
+## warnings 
+Please keep in mind that this program is specifically designed to work with Facebok's 'Weekly Ad Report'. 
+Usage with Excel sheets in different formats will lead to errors and unexpected behavior.
+
+As of the writing of this readMe, there is a problem with the new Excel files which sometimes cause a warning to pop up when you wish to open the new file with Excel. 
+(Something like: 'We found a problem with some content in 'newExcel.xlsx'. Do you want us to try to recover as much as we can? If you trust the source of this workbook, click Yes.')
+Please click 'yes' when prompted to and the file should open normally.
+
 ## Installing  
 Before Ex2Ex is ready for usage, you need to install some dependencies to make the program run properly.
 Below is a step-by-step guide to get you to the process. 
@@ -65,22 +83,3 @@ Once you're in the right folder, all you need to do is type the following in the
 This should automatically install all the NPM packages you need.
 It might take a while, but afterwards your ex2ex is ready for usage :) 
 
-
-## usage
-Ex2Ex is run through the terminal. If everything is installed correctly, using it should be very easy.
-The commands in the terminal should look as follows:
-
-    node /users/example/ex2ex/src/ex2ex.js /users/example/documents/oldExcel.xlsx /users/example/documents/newExcel.xlsx
-
-The command consists of four parts. The first is the 'node' command. The second is the location of the ex2ex.js file. The third is the Excel file you wish to process. The fourth is the name and location of the new Excel file after processing.
-The path of the ex2ex.js file and the old Excel file are easily obtained by simply dragging and dropping the file into the terminal, just like you would when attaching a file to an email.
-Always remember to add the .xlsx extension to the new Excel file in the command line, or else it won't render as a readable Excel sheet
-
-
-## warnings 
-Please keep in mind that this program is specifically designed to work with Facebok's 'Weekly Ad Report'. 
-Usage with Excel sheets in different formats will lead to errors and unexpected behavior.
-
-As of the writing of this readMe, there is a problem with the new Excel files which sometimes cause a warning to pop up when you wish to open the new file with Excel. 
-(Something like: 'We found a problem with some content in 'newExcel.xlsx'. Do you want us to try to recover as much as we can? If you trust the source of this workbook, click Yes.')
-Please click 'yes' when prompted to and the file should open normally.
