@@ -188,8 +188,6 @@ function makeLaagDataRows(groupByModel) {
     const totArray = [rtObject, prObject, awObject]
     const totObject =  rowsReducer(totArray, 'TOTAAL');
 
-    console.log(prArray[4])
-
     let finalArray = [{}, prObject, ...prArray, {}, rtObject, ...rtArray, {}, awObject, ...awArray, {}, totObject];
     
     finalArray = finalArray.map(obj => {
@@ -200,7 +198,8 @@ function makeLaagDataRows(groupByModel) {
             return numberDotsAndCommas(obj)
         }
     })
-
+    console.log(finalArray.length)
+    console.log(finalArray)
     return finalArray
 }
 
@@ -220,9 +219,15 @@ function numberDotsAndCommas(rowObj) {
         }
         else {
             propVal = new Intl.NumberFormat('en-NL').format(propVal) 
-            return propVal = propVal.replace(/[,.]/g, (m) => {
+            propVal = propVal.replace(/[,.]/g, (m) => {
                 return m === ',' ? '.' : ',';   
             }); 
+            if (propVal.split(',')[1] !== undefined && propVal.split(',')[1].length < 2) {
+                propVal += 0    
+                console.log(propVal)            
+            }
+
+            return propVal
         }
     });
 }
