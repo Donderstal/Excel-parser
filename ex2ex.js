@@ -1,6 +1,5 @@
 const XLSX = require('xlsx');
 const _ = require('lodash');
-const INTL = require('intl');
 
 (function () {
     const inputSheet = process.argv[2];
@@ -32,7 +31,6 @@ const INTL = require('intl');
 
     exportNewWb(newWb, outputSheet);
 })();
-
 //Functions in order of appearance in above IIFE
 
 /**
@@ -198,12 +196,8 @@ function makeLaagDataRows(groupByModel) {
             return numberDotsAndCommas(obj)
         }
     })
-    console.log(finalArray.length)
-    console.log(finalArray)
     return finalArray
 }
-
-
 /**
  * Add dots and commas to make number easily readable
  */
@@ -223,15 +217,12 @@ function numberDotsAndCommas(rowObj) {
                 return m === ',' ? '.' : ',';   
             }); 
             if (propVal.split(',')[1] !== undefined && propVal.split(',')[1].length < 2) {
-                propVal += 0    
-                console.log(propVal)            
+                propVal += 0           
             }
-
             return propVal
         }
     });
 }
-
 /**
  * Take array of Data Report objects and add their properties. Return single object with added properties
  */
