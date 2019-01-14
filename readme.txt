@@ -28,6 +28,8 @@ The path of the ex2ex.js file and the old Excel file are easily obtained by simp
     (Something like: 'We found a problem with some content in 'newExcel.xlsx'. Do you want us to try to recover as much as we can? If you trust the source of this workbook, click Yes.')
     Please click 'yes' when prompted to and the file should open normally.
 
+5.  While ex2ex mimics a lot af the calculations excel could do for you, it cannot reproduce 'deeper' excel logic, like Excel functions. 
+    You still need to add those manually if required
 
 ## Installing  
 Before Ex2Ex is ready for usage, you need to install some dependencies to make the program run properly.
