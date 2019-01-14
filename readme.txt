@@ -11,7 +11,7 @@ The commands in the terminal is structured as follows:
 The command consists of four parts. The first is the 'node' command. The second is the location of the ex2ex.js file. The third is the Excel file you wish to process. The fourth is the name and location of the new Excel file after processing.
 In practice it will look something like this:
 
-    node /Users/daan/Documents/Code/Ex2Ex/src/ex2ex.js /Users/daan/Downloads/Week52_Bakker.com-Meta-analyse-Oct-31-2018-Jan-1-2019.xlsx /Users/daan/Documents/ExcelSheets/NewExcelSheet.xlsx
+    node /Users/daan/Documents/Code/Ex2Ex/ex2ex.js /Users/daan/Downloads/Week52_Bakker.com-Meta-analyse-Oct-31-2018-Jan-1-2019.xlsx /Users/daan/Documents/ExcelSheets/NewExcelSheet.xlsx
 
 The path of the ex2ex.js file and the old Excel file are easily obtained by simply dragging and dropping the file into the terminal, just like you would when attaching a file to an email.
 

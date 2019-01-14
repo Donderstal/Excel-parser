@@ -22,11 +22,7 @@ const INTL = require('intl');
 
     let dataReportRows = makeLaagDataRows(groupByModel);
 
-    console.log(dataReportRows)
-
     dataReportRows = euroAndPercentAdder(dataReportRows)
-
-    console.log(dataReportRows)
 
     let newWb = createWorkbook();
 
@@ -38,35 +34,7 @@ const INTL = require('intl');
 })();
 
 //Functions in order of appearance in above IIFE
-function euroAndPercentAdder(dataReportRows) {
-    return dataReportRows.map(obj => {
-        if (obj.hasOwnProperty('Budget spent')) {
-            return {        
-                'Rijlabels': obj['Rijlabels'],
-                'Budget spent': '€'+ obj['Budget spent'],
-                'Impressions': obj['Impressions'],
-                'Website Clicks': obj['Website Clicks'],
-                'Website Visits': obj['Website Visits'],
-                'Purchases [28 Days PC]': obj['Purchases [28 Days PC]'],
-                'Purchases [7 Days PI]': obj['Purchases [7 Days PI]'],
-                'CPM €': '€'+obj['CPM €'],
-                'CPC €': '€'+obj['CPC €'],
-                'CTR %': obj['CTR %'] + " %",
-                'PC Con %': obj['PC Con %'] + " %",
-                'PI Con %': obj['PI Con %'] + " %" ,
-                'Cost per landing view': '€'+obj['Cost per landing view'],
-                'Cost per PC Con': '€'+obj['Cost per PC Con'],
-                'Cost per PI Con': '€'+obj['Cost per PI Con'],
-                'Som van purchases': obj['Som van purchases'],
-                'Value per Conversie': '€'+obj['Value per Conversie'],
-                'Som van Purch Con value (TOTAL)': obj['Som van Purch Con value (TOTAL)']
-            }
-        }
-        else {
-            return {}
-        }
-    })
-}
+
 /**
  * Take Excel workbook as input and return first sheet as an array of Json objects
  */
@@ -154,7 +122,7 @@ function reduceCountryRows(array) {
     return returnObject;
 }
 /**
- * typeParser (checks for empty strings and converts string to numbers)
+ * typeParser (checks for empty strings and converts them to zeros)
  */
 function typeParser(input) {
     if (input == '') {
@@ -207,6 +175,8 @@ function makeLaagDataRows(groupByModel) {
             awArray.push(groupByModel[oKey]);
         }
     });
+
+    //
     const rtObject = rtArray.length === 0 ? {} : rowsReducer(rtArray, 'RT');
     let prObject = prArray.length === 0 ? {} : rowsReducer(prArray, 'PR');
     const awObject = awArray.length === 0 ? {} : rowsReducer(awArray, 'AW');
@@ -217,6 +187,8 @@ function makeLaagDataRows(groupByModel) {
 
     const totArray = [rtObject, prObject, awObject]
     const totObject =  rowsReducer(totArray, 'TOTAAL');
+
+    console.log(prArray[4])
 
     let finalArray = [{}, prObject, ...prArray, {}, rtObject, ...rtArray, {}, awObject, ...awArray, {}, totObject];
     
@@ -260,51 +232,27 @@ function numberDotsAndCommas(rowObj) {
  */
 function rowsReducer(array, type) {
     const budSpent = _.sumBy(array, o => {
-        if (typeof o['Budget spent'] === undefined) {
-            return 0
-        }
         return o['Budget spent'];            
     });
     const imp = _.sumBy(array, o => {
-        /* if (typeof o['Impressions'] === undefined) {
-            return 0
-        } */
         return o['Impressions'];
     });
     const clicks = _.sumBy(array, o => {
-        /* if (typeof o['Website Clicks'] === undefined) {
-            return 0
-        } */
         return o['Website Clicks'];
     });
     const visits = _.sumBy(array, o => {
-        /* if (typeof o['Website Visits'] === undefined) {
-            return 0
-        } */
         return o['Website Visits'];
     });
     const pu28 = _.sumBy(array, o => {
-        /* if (o['Purchases [28 Days PC]'] === undefined) {
-            return 0
-        } */
         return o['Purchases [28 Days PC]'];
     });
     const pu7 = _.sumBy(array, o => {
-        /* if (typeof o['Purchases [7 Days PI]'] === undefined) {
-            return 0
-        } */
         return o['Purchases [7 Days PI]'];
     });
     const sumTotVal = _.sumBy(array, o => {
-        /* if (typeof o['Som van Purch Con value (TOTAL)'] === undefined) {
-            return 0
-        } */
         return o['Som van Purch Con value (TOTAL)'];
     });
     const sumPurch = _.sumBy(array, o => {
-        /* if (typeof o['Som van purchases'] === undefined) {
-            return 0
-        } */
         return o['Som van purchases'];
     });
     return {
@@ -327,6 +275,38 @@ function rowsReducer(array, type) {
         'Value per Conversie': (sumTotVal / sumPurch).toFixed(2),
         'Som van Purch Con value (TOTAL)': sumTotVal
     };
+}
+/**
+ * Adds euro and percent marks
+ */
+function euroAndPercentAdder(dataReportRows) {
+    return dataReportRows.map(obj => {
+        if (obj.hasOwnProperty('Budget spent')) {
+            return {        
+                'Rijlabels': obj['Rijlabels'],
+                'Budget spent': '€'+ obj['Budget spent'],
+                'Impressions': obj['Impressions'],
+                'Website Clicks': obj['Website Clicks'],
+                'Website Visits': obj['Website Visits'],
+                'Purchases [28 Days PC]': obj['Purchases [28 Days PC]'],
+                'Purchases [7 Days PI]': obj['Purchases [7 Days PI]'],
+                'CPM €': '€'+obj['CPM €'],
+                'CPC €': '€'+obj['CPC €'],
+                'CTR %': obj['CTR %'] + " %",
+                'PC Con %': obj['PC Con %'] + " %",
+                'PI Con %': obj['PI Con %'] + " %" ,
+                'Cost per landing view': '€'+obj['Cost per landing view'],
+                'Cost per PC Con': '€'+obj['Cost per PC Con'],
+                'Cost per PI Con': '€'+obj['Cost per PI Con'],
+                'Som van purchases': obj['Som van purchases'],
+                'Value per Conversie': '€'+obj['Value per Conversie'],
+                'Som van Purch Con value (TOTAL)': obj['Som van Purch Con value (TOTAL)']
+            }
+        }
+        else {
+            return {}
+        }
+    })
 }
 /**
  * Create new Excel workbook 
