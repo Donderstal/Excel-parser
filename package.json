@@ -12,7 +12,6 @@
         "flow": "flow"
     },
     "dependencies": {
-        "intl": "^1.2.5",
         "lodash": "^4.17.11",
         "xlsx": "^0.14.1"
     }
