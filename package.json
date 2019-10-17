@@ -1,6 +1,6 @@
 {
-    "name": "ex2ex",
-    "main": "lib/ex2ex.js",
+    "name": "Excel-parser",
+    "main": "lib/Excel-parser.js",
     "devDependencies": {
         "babel-cli": "^6.26.0",
         "babel-preset-flow": "^6.23.0",
