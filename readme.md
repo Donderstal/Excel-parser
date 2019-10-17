@@ -1,5 +1,5 @@
 # campaign-automation
-This program is designed to be a time saving application that can process Excel files received from Facebook ads into a desired format.
+This program is designed to be a time saving application that can process Excel files received from Facebook Ads into a desired format.
 Installing it properly might be a little bit challenging, but after installation, usage should be easy enough.
 
 ## usage
